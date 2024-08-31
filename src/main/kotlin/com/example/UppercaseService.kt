@@ -12,9 +12,11 @@ class UppercaseService {
     ): String {
         return input
             .uppercase()
-            .apply {
-                if (lengthLimit != null && length > lengthLimit) {
-                    substring(0, lengthLimit)
+            .let {
+                if (lengthLimit != null && it.length > lengthLimit) {
+                    it.substring(0, lengthLimit)
+                } else {
+                    it
                 }
             }.let {
                 if (applyPrefix && prefix != null) {

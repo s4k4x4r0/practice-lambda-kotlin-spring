@@ -14,6 +14,9 @@ plugins {
     // Lambdaのために実行可能jarを作るGradleタスクを自動生成する
     // ユーザガイ: <https://gradleup.com/shadow/>
     id("com.gradleup.shadow") version "8.3.0"
+
+    // JSONの処理（Kotlinx Serializer）に必要
+    kotlin("plugin.serialization") version "2.0.20"
 }
 
 group = "org.example"
@@ -43,10 +46,15 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-function-kotlin:$springCloudFunctionVersion")
     implementation("org.springframework.cloud:spring-cloud-function-adapter-aws:$springCloudFunctionVersion")
 
-    // JSONの変換に必須
+    // JSONの処理（Kotlinx Serializer）に必要
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
+    // API Gatewayとのインタフェースに必要
     implementation("com.amazonaws:aws-lambda-java-events:$awsJavaSdkVersion")
+
+    // テストに必要
+    testImplementation(kotlin("test"))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.shadowJar {
@@ -64,4 +72,8 @@ tasks.withType<KotlinCompile> {
         // Java側のコードもKotlinでNull安全に扱えるようにする（Java側で対応されていれば）
         freeCompilerArgs.add("-Xjsr305=strict")
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
