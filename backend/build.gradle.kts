@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -60,6 +61,19 @@ dependencies {
 tasks.shadowJar {
     // 実行可能Jarの末尾にawsと付与される
     archiveClassifier.set("aws")
+
+    // Springに必要なファイルをshadowJarにマージするように指示
+    // Springに必須
+    mergeServiceFiles()
+    append("META-INF/spring.handlers")
+    append("META-INF/spring.schemas")
+    append("META-INF/spring.tooling")
+    append("META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports")
+    append("META-INF/spring/org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration.imports")
+    transform(PropertiesFileTransformer().apply {
+        paths = listOf("META-INF/spring.factories")
+        mergeStrategy = "append"
+    })
 }
 
 tasks.assemble {
@@ -76,4 +90,13 @@ tasks.withType<KotlinCompile> {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.withType<Jar> {
+    manifest {
+        // META-INF/MANIFEST.MFファイルに、Main-Classエントリを設定
+        // メインクラスを見つけるために必須
+        // Lambdaに環境変数MAIN_CLASSを指定してもよい
+        attributes["Main-Class"] = "com.example.ApplicationKt"
+    }
 }

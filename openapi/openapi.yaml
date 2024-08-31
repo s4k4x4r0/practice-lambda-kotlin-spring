@@ -21,7 +21,7 @@ paths:
         passthroughBehavior: when_no_templates
         httpMethod: POST
         requestParameters:
-          integration.request.header.spring.cloud.function.definition: "'hello'"
+          integration.request.header.spring.cloud.function.definition: "'helloFunction'"
   /uppercase:
     post:
       summary: Converts text to uppercase
@@ -44,7 +44,7 @@ paths:
         passthroughBehavior: when_no_templates
         httpMethod: POST
         requestParameters:
-          integration.request.header.spring.cloud.function.definition: "'uppercase'"
+          integration.request.header.spring.cloud.function.definition: "'uppercaseFunction'"
 components:
   schemas:
     HelloResponse:

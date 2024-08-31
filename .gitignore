@@ -37,3 +37,10 @@ bin/
 
 ### OpenAPI Generator ###
 generated/
+
+### Local Environment ###
+.envrc.local
+
+### Terraform ###
+.terraform/
+.terraform.lock.hcl
