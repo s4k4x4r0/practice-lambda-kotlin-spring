@@ -2,8 +2,8 @@ package com.example
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
-import com.example.model.UppercaseRequest
-import com.example.model.UppercaseResponse
+import com.example.models.UppercaseRequest
+import com.example.models.UppercaseResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals

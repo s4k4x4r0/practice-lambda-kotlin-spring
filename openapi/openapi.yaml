@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: Lambda API
+  description: API with multiple Lambda functions using HTTP headers for function routing.
+  version: 1.0.0
+paths:
+  /hello:
+    get:
+      summary: Returns a greeting message
+      operationId: getHello
+      responses:
+        '200':
+          description: A greeting message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelloResponse'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        uri: arn:aws:apigateway:{region}:lambda:path/2015-03-31/functions/{lambdaArn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        requestParameters:
+          integration.request.header.spring.cloud.function.definition: "'hello'"
+  /uppercase:
+    post:
+      summary: Converts text to uppercase
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UppercaseRequest'
+      responses:
+        '200':
+          description: The uppercase version of the input string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UppercaseResponse'
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        uri: arn:aws:apigateway:{region}:lambda:path/2015-03-31/functions/{lambdaArn}/invocations
+        passthroughBehavior: when_no_templates
+        httpMethod: POST
+        requestParameters:
+          integration.request.header.spring.cloud.function.definition: "'uppercase'"
+components:
+  schemas:
+    HelloResponse:
+      type: object
+      required: [ value ]
+      properties:
+        value:
+          type: string
+    UppercaseRequest:
+      type: object
+      required: [ input ]
+      properties:
+        input:
+          type: string
+        lengthLimit:
+          type: integer
+        applyPrefix:
+          type: boolean
+        prefix:
+          type: string
+    UppercaseResponse:
+      type: object
+      required: [ uppercase, original, length ]
+      properties:
+        uppercase:
+          type: string
+        original:
+          type: string
+        length:
+          type: integer

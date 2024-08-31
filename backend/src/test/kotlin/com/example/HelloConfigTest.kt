@@ -2,6 +2,8 @@ package com.example
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
+import com.example.models.HelloResponse
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,7 +19,7 @@ class HelloConfigTest(
 ) {
 
     @MockBean
-    lateinit private var helloService: HelloService
+    private lateinit var helloService: HelloService
 
     @BeforeEach
     fun setup() {
@@ -35,6 +37,11 @@ class HelloConfigTest(
 
         // Assert
         assertEquals(200, response.statusCode)
-        assertEquals("Hello, Mocked World!", response.body)
+
+        // Deserialize the JSON response body to HelloResponse
+        val helloResponse = Json.decodeFromString<HelloResponse>(response.body)
+
+        // Verify that the response body contains the expected message
+        assertEquals("Hello, Mocked World!", helloResponse.value)
     }
 }
