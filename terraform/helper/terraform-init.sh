@@ -2,7 +2,7 @@
 
 # Check if the environment variable is set
 if [ -z "$TFSTATE_BUCKET" ]; then
-  echo "Error: Environment variable TF_VAR_tfstate_bucket is not set."
+  echo "Error: Environment variable TFSTATE_BUCKET is not set."
   exit 1
 fi
 

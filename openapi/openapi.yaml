@@ -1,13 +1,13 @@
 openapi: 3.0.3
 info:
   title: Lambda API
-  description: API with multiple Lambda functions using HTTP headers for function routing.
+  description: API with multiple Lambda functions using Lambda environment variables for function routing.
   version: 1.0.0
 paths:
   /hello:
     get:
       summary: Returns a greeting message
-      operationId: getHello
+      operationId: hello
       responses:
         '200':
           description: A greeting message
@@ -16,15 +16,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/HelloResponse'
       x-amazon-apigateway-integration:
-        type: aws_proxy
-        uri: arn:aws:apigateway:{region}:lambda:path/2015-03-31/functions/{lambdaArn}/invocations
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${region}:${accountId}:function:hello/invocations
         passthroughBehavior: when_no_templates
         httpMethod: POST
-        requestParameters:
-          integration.request.header.spring.cloud.function.definition: "'helloFunction'"
+        type: aws_proxy
   /uppercase:
     post:
       summary: Converts text to uppercase
+      operationId: uppercase
       requestBody:
         required: true
         content:
@@ -39,23 +38,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/UppercaseResponse'
       x-amazon-apigateway-integration:
-        type: aws_proxy
-        uri: arn:aws:apigateway:{region}:lambda:path/2015-03-31/functions/{lambdaArn}/invocations
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${region}:${accountId}:function:uppercase/invocations
         passthroughBehavior: when_no_templates
         httpMethod: POST
-        requestParameters:
-          integration.request.header.spring.cloud.function.definition: "'uppercaseFunction'"
+        type: aws_proxy
 components:
   schemas:
     HelloResponse:
       type: object
-      required: [ value ]
+      required:
+        - value
       properties:
         value:
           type: string
     UppercaseRequest:
       type: object
-      required: [ input ]
+      required: 
+        - input
       properties:
         input:
           type: string
@@ -67,7 +66,10 @@ components:
           type: string
     UppercaseResponse:
       type: object
-      required: [ uppercase, original, length ]
+      required: 
+        - uppercase
+        - original
+        - length
       properties:
         uppercase:
           type: string

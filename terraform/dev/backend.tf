@@ -3,7 +3,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project = "practice-lambda-kotlin-spring"
+      Project = var.project
     }
   }
 }
