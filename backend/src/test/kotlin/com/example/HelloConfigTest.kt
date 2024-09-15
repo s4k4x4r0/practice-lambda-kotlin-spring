@@ -11,11 +11,12 @@ import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import java.util.function.Function
 
 @SpringBootTest
 class HelloConfigTest(
-    @Autowired private val helloFunction: Function<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>,
+    @Autowired
+    // 注意：By NameでBean解決するので、このフィールド名がFunction名と一致している必要がある
+    private val helloFunction: (APIGatewayProxyRequestEvent) -> APIGatewayProxyResponseEvent
 ) {
 
     @MockBean
@@ -33,7 +34,7 @@ class HelloConfigTest(
         val request = APIGatewayProxyRequestEvent()
 
         // Act
-        val response = helloFunction.apply(request)
+        val response = helloFunction(request)
 
         // Assert
         assertEquals(200, response.statusCode)

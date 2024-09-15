@@ -11,13 +11,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import java.util.function.Function
 
 @SpringBootTest
 class UppercaseConfigTest(
-    @Autowired private val uppercaseFunction: Function<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>
+    @Autowired
+    // 注意：By NameでBean解決するので、このフィールド名がFunction名と一致している必要がある
+    private val uppercaseFunction: (APIGatewayProxyRequestEvent) -> APIGatewayProxyResponseEvent
 ) {
 
     @MockBean
@@ -45,7 +48,7 @@ class UppercaseConfigTest(
         val apiGatewayRequest = APIGatewayProxyRequestEvent().withBody(requestBody)
 
         // Act
-        val response = uppercaseFunction.apply(apiGatewayRequest)
+        val response = uppercaseFunction(apiGatewayRequest)
 
         // Assert
         assertEquals(200, response.statusCode)

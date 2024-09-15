@@ -8,7 +8,6 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.util.function.Function
 
 @Configuration
 class UppercaseConfig {
@@ -18,29 +17,25 @@ class UppercaseConfig {
     @Bean
     fun uppercaseFunction(
         uppercaseService: UppercaseService
-    ): Function<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-        return Function { input ->
-            val body = input.body
-            val request = json.decodeFromString<UppercaseRequest>(body)
+    ) = { input: APIGatewayProxyRequestEvent ->
+        val body = input.body
+        val request = json.decodeFromString<UppercaseRequest>(body)
 
-            val result = uppercaseService.convertToUppercase(
-                input = request.input,
-                lengthLimit = request.lengthLimit,
-                applyPrefix = request.applyPrefix == true,
-                prefix = request.prefix
-            )
+        val result = uppercaseService.convertToUppercase(
+            input = request.input,
+            lengthLimit = request.lengthLimit,
+            applyPrefix = request.applyPrefix == true,
+            prefix = request.prefix
+        )
 
-            val response = UppercaseResponse(
-                uppercase = result,
-                original = request.input,
-                length = result.length
-            )
+        val response = UppercaseResponse(
+            uppercase = result,
+            original = request.input,
+            length = result.length
+        )
 
-            val responseBody = json.encodeToString(response)
-
-            APIGatewayProxyResponseEvent()
-                .withStatusCode(200)
-                .withBody(responseBody)
-        }
+        APIGatewayProxyResponseEvent()
+            .withStatusCode(200)
+            .withBody(json.encodeToString(response))
     }
 }
