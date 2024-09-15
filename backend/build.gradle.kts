@@ -18,10 +18,21 @@ plugins {
 
     // JSONの処理（Kotlinx Serializer）に必要
     kotlin("plugin.serialization") version "2.0.20"
+
+    // Gitバージョンを取得
+    id("com.palantir.git-version") version "3.1.0"
+    id("com.github.gmazzo.buildconfig") version "5.4.0"
 }
 
 group = "org.example"
-version = "0.1"
+
+// Gitからバージョンを自動で取得
+val gitVersion: groovy.lang.Closure<String> by extra
+version = gitVersion(mapOf("prefix" to "v-"))
+
+buildConfig {
+    buildConfigField("APP_VERSION", project.version.toString())
+}
 
 java {
     toolchain {
@@ -52,6 +63,9 @@ dependencies {
 
     // API Gatewayとのインタフェースに必要
     implementation("com.amazonaws:aws-lambda-java-events:$awsJavaSdkVersion")
+
+    // AOPで必須（共通でHTTPヘッダを設定するのに使用）
+    implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // テストに必要
     testImplementation(kotlin("test"))

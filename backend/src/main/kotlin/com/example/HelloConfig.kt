@@ -14,7 +14,7 @@ class HelloConfig {
     @Bean
     fun helloFunction(
         helloService: HelloService
-    ) : (APIGatewayProxyRequestEvent) -> APIGatewayProxyResponseEvent= {
+    ) : (APIGatewayProxyRequestEvent) -> APIGatewayProxyResponseEvent = {
         val helloMessage = helloService.getHelloMessage()
         val response = HelloResponse(value = helloMessage)
 

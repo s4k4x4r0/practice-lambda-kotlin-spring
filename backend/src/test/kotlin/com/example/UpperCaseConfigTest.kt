@@ -11,10 +11,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import java.util.function.Function
+import kotlin.collections.contains
 
 @SpringBootTest
 class UppercaseConfigTest(
@@ -61,5 +60,27 @@ class UppercaseConfigTest(
         val expectedResponseBody = json.encodeToString(expectedResponse)
 
         assertEquals(expectedResponseBody, response.body)
+    }
+
+    @Test
+    fun `uppercaseFunction should return a version header`() {
+
+        // Arrange
+        val request = UppercaseRequest(
+            input = "hello",
+            lengthLimit = 5,
+            applyPrefix = true,
+            prefix = "Pre_"
+        )
+        val requestBody = json.encodeToString(request)
+
+        val apiGatewayRequest = APIGatewayProxyRequestEvent().withBody(requestBody)
+
+        // Act
+        val response = uppercaseFunction(apiGatewayRequest)
+
+        // Assert
+        assert("X-App-Version" in response.headers)
+        assert(response.headers["X-App-Version"] != "")
     }
 }

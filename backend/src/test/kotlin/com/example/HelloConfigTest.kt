@@ -30,6 +30,7 @@ class HelloConfigTest(
 
     @Test
     fun `helloFunction should return a 200 response with hello message`() {
+
         // Arrange
         val request = APIGatewayProxyRequestEvent()
 
@@ -44,5 +45,19 @@ class HelloConfigTest(
 
         // Verify that the response body contains the expected message
         assertEquals("Hello, Mocked World!", helloResponse.value)
+    }
+
+    @Test
+    fun `helloFunction should return a version header`() {
+
+        // Arrange
+        val request = APIGatewayProxyRequestEvent()
+
+        // Act
+        val response = helloFunction(request)
+
+        // Assert
+        assert("X-App-Version" in response.headers)
+        assert(response.headers["X-App-Version"] != "")
     }
 }
