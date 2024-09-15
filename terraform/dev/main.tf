@@ -19,7 +19,7 @@ module "api_handlers" {
 
   source = "../modules/api_handler"
 
-  jar_file_path     = "${path.root}/../../backend/build/libs/backend-0.1-aws.jar"
+  jar_file_path     = reverse(sort(tolist(fileset("", "${path.root}/../../backend/build/libs/backend-*-aws.jar"))))[0]
   api_execution_arn = aws_api_gateway_rest_api.api.execution_arn
   operation_id      = each.key
   function_settings = each.value
