@@ -24,7 +24,7 @@ plugins {
     id("com.github.gmazzo.buildconfig") version "5.4.0"
 }
 
-group = "org.example"
+group = "com.example"
 
 // Gitからバージョンを自動で取得
 val gitVersion: groovy.lang.Closure<String> by extra
