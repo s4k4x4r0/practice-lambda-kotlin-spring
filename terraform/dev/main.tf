@@ -52,3 +52,22 @@ resource "aws_iam_policy" "uppercase" {
     ]
   })
 }
+
+resource "aws_s3_bucket" "backend_jar" {
+  bucket_prefix = "backend-jar"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "backend_jar" {
+  bucket = aws_s3_bucket.backend_jar.id
+
+  rule {
+    id     = "expiration after a certain period"
+    status = "Enabled"
+
+    expiration {
+      days = 7
+    }
+
+  }
+}
