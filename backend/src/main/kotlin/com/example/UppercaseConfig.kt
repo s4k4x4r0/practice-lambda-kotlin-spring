@@ -2,8 +2,6 @@ package com.example
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
-import com.example.models.UppercaseRequest
-import com.example.models.UppercaseResponse
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.springframework.context.annotation.Bean
@@ -19,7 +17,7 @@ class UppercaseConfig {
         uppercaseService: UppercaseService
     ) = { input: APIGatewayProxyRequestEvent ->
         val body = input.body
-        val request = json.decodeFromString<UppercaseRequest>(body)
+        val request = json.decodeFromString<com.example.models.UppercaseRequest>(body)
 
         val result = uppercaseService.convertToUppercase(
             input = request.input,
@@ -28,7 +26,7 @@ class UppercaseConfig {
             prefix = request.prefix
         )
 
-        val response = UppercaseResponse(
+        val response = com.example.models.UppercaseResponse(
             uppercase = result,
             original = request.input,
             length = result.length

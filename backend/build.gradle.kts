@@ -1,3 +1,5 @@
+import com.example.JarS3BucketConfigurationProvider
+import com.example.buildSrc.S3UploadTask
 import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -31,6 +33,7 @@ val gitVersion: groovy.lang.Closure<String> by extra
 version = gitVersion(mapOf("prefix" to "v-"))
 
 buildConfig {
+    packageName("${group}.buildConfig")
     buildConfigField("APP_VERSION", project.version.toString())
 }
 
@@ -113,4 +116,17 @@ tasks.withType<Jar> {
         // Lambdaに環境変数MAIN_CLASSを指定してもよい
         attributes["Main-Class"] = "com.example.ApplicationKt"
     }
+}
+
+
+
+tasks.register<S3UploadTask>("cpJarS3") {
+    group = "AWS"
+    description = "Upload Shado Jar to S3"
+
+    val jarS3BucketConfigurationProvider = project.objects.newInstance<JarS3BucketConfigurationProvider>()
+
+    inputFile = tasks.shadowJar.get().archiveFile
+    bucketName = jarS3BucketConfigurationProvider.bucketName
+    prefix = "lambdaJar"
 }

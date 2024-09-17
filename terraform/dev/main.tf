@@ -19,7 +19,7 @@ module "api_handlers" {
 
   source = "../modules/api_handler"
 
-  jar_file_path     = reverse(sort(tolist(fileset("", "${path.root}/../../backend/build/libs/backend-*-aws.jar"))))[0]
+  jar_file_path     = reverse(sort(tolist(fileset("", "${path.root}/../../backend/build/libs/${var.project}-*-aws.jar"))))[0]
   api_execution_arn = aws_api_gateway_rest_api.api.execution_arn
   operation_id      = each.key
   function_settings = each.value
@@ -56,6 +56,9 @@ resource "aws_iam_policy" "uppercase" {
 resource "aws_s3_bucket" "backend_jar" {
   bucket_prefix = "backend-jar"
   force_destroy = true
+  tags = {
+    Role = "backend-jar"
+  }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "backend_jar" {
