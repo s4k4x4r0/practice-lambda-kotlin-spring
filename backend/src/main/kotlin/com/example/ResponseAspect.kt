@@ -3,8 +3,7 @@ package com.example
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import org.aspectj.lang.annotation.AfterReturning
 import org.aspectj.lang.annotation.Aspect
-import org.aspectj.lang.annotation.Pointcut
-import org.example.backend.BuildConfig
+import com.example.backend.BuildConfig
 import org.springframework.stereotype.Component
 
 @Aspect
