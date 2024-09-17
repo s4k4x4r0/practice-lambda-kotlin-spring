@@ -114,3 +114,11 @@ tasks.withType<Jar> {
         attributes["Main-Class"] = "com.example.ApplicationKt"
     }
 }
+
+tasks.register<S3CopyTask>("uploadJarToS3") {
+    group = "AWS"
+    description = "Upload the Jar to S3 using AWS SDK for Kotlin with the original filename"
+
+    from(tasks.shadowJar.get().archiveFile)
+    into("s3://backend-jar20240916170009160200000001/lambdaJar/")
+}
