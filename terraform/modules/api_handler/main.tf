@@ -13,6 +13,12 @@ resource "aws_lambda_function" "api_handler" {
       spring_cloud_function_definition = "${var.operation_id}Function"
     }
   }
+
+  logging_config {
+    log_format            = "JSON"
+    application_log_level = "DEBUG"
+    system_log_level      = "DEBUG"
+  }
 }
 
 resource "aws_lambda_permission" "api_handler" {

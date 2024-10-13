@@ -52,6 +52,10 @@ repositories {
 val kotlinxSerializationVersion = "1.3.2"
 val springCloudFunctionVersion = "4.1.3"
 val awsJavaSdkVersion = "3.13.0"
+val awsLambdaJavaLog4J2Version = "1.6.0"
+val log4JLayoutTemplateJsonVersion = "2.17.1"
+val log4JSlf4J2ImplVersion = "2.19.0"
+val kotlinLoggingJvmVersion = "7.0.0"
 
 dependencies {
     // SpringBootで必須
@@ -69,6 +73,20 @@ dependencies {
 
     // AOPで必須（共通でHTTPヘッダを設定するのに使用）
     implementation("org.springframework.boot:spring-boot-starter-aop")
+
+    // Log4j2
+    implementation("org.springframework.boot:spring-boot-starter-log4j2")
+    modules {
+        module("org.springframework.boot:spring-boot-starter-logging") {
+            replacedBy("org.springframework.boot:spring-boot-starter-log4j2", "Use Log4j2 instead of Logback")
+        }
+    }
+    implementation("com.amazonaws:aws-lambda-java-log4j2:$awsLambdaJavaLog4J2Version")
+    implementation("org.apache.logging.log4j:log4j-layout-template-json:$log4JLayoutTemplateJsonVersion")
+    implementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4JSlf4J2ImplVersion")
+
+    // Kotlin Logging
+    implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingJvmVersion")
 
     // テストに必要
     testImplementation(kotlin("test"))
@@ -91,6 +109,10 @@ tasks.shadowJar {
         paths = listOf("META-INF/spring.factories")
         mergeStrategy = "append"
     })
+
+
+    // log4j2対応
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer::class.java)
 }
 
 tasks.assemble {
