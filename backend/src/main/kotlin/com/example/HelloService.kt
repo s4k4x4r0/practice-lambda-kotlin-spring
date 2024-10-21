@@ -10,7 +10,6 @@ class HelloService {
 
     fun getHelloMessage(): String {
         logger.info { "returning hello world" }
-        throw RuntimeException("testException")
         return "Hello, World!"
     }
 }
