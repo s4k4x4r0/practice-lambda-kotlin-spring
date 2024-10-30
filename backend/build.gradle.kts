@@ -33,6 +33,7 @@ val gitVersion: groovy.lang.Closure<String> by extra
 version = gitVersion(mapOf("prefix" to "v-"))
 
 buildConfig {
+    useKotlinOutput { internalVisibility = false }
     packageName("${group}.buildConfig")
     buildConfigField("APP_VERSION", project.version.toString())
 }
@@ -70,9 +71,6 @@ dependencies {
 
     // API Gatewayとのインタフェースに必要
     implementation("com.amazonaws:aws-lambda-java-events:$awsJavaSdkVersion")
-
-    // AOPで必須（共通でHTTPヘッダを設定するのに使用）
-    implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // Log4j2
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
