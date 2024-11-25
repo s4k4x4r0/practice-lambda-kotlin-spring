@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.handlerBuilder.ApiGatewayHandlerBuilder
 import com.example.models.UppercaseRequest
 import com.example.models.UppercaseResponse
 import org.springframework.context.annotation.Bean
@@ -11,7 +12,7 @@ class UppercaseConfig {
     @Bean
     fun uppercaseFunction(
         uppercaseService: UppercaseService
-    ) = ApiGatewayHandlerBuilder.build<UppercaseRequest, UppercaseResponse> { request ->
+    ) = ApiGatewayHandlerBuilder.build<UppercaseRequest, Unit, UppercaseResponse> { request, _ ->
         val result = uppercaseService.convertToUppercase(
             input = request.input,
             lengthLimit = request.lengthLimit,
