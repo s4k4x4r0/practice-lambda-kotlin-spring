@@ -7,125 +7,105 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class ApiGatewayHandlerBuilderTest {
+class HandlerTest {
 
     @Serializable
-    data class Request(val name: String)
+    data class RequestBody(val name: String, val age: Int)
 
     @Serializable
-    data class Query(val filter: String)
+    data class QueryParameters(val filter: String, val limit: Int)
 
     @Serializable
-    data class Response(val message: String)
+    data class ResponseBody(val message: String)
 
     private val json = Json { ignoreUnknownKeys = true }
 
     @Test
-    fun `build handler should return expected response for valid body and query`() {
-        // Arrange
-        val handler = ApiGatewayHandlerBuilder.build<Request, Query, Response> { body, query ->
-            Response(message = "Hello, ${body.name}! Filter: ${query.filter}")
+    fun `test createApiHandler`() {
+        val handler = Handler.createApiHandler<RequestBody, ResponseBody> { requestBody ->
+            assertEquals("John", requestBody.name)
+            assertEquals(30, requestBody.age)
+            ResponseBody("Hello, ${requestBody.name}")
         }
-        val requestBody = json.encodeToString(Request(name = "Test User"))
-        val queryParameters = mapOf("filter" to "active")
-        val requestEvent = APIGatewayProxyRequestEvent()
-            .withBody(requestBody)
-            .withQueryStringParameters(queryParameters)
 
-        // Act
-        val responseEvent = handler(requestEvent)
+        val requestBody = json.encodeToString(RequestBody("John", 30))
+        val requestEvent = APIGatewayProxyRequestEvent().apply {
+            this.body = requestBody
+        }
 
-        // Assert
-        assertEquals(200, responseEvent.statusCode)
-        val expectedResponseBody = json.encodeToString(
-            Response(message = "Hello, Test User! Filter: active")
+        val response = handler(requestEvent)
+
+        assertEquals(200, response.statusCode)
+        assertEquals(
+            "{\"message\":\"Hello, John\"}",
+            response.body
         )
-        assertEquals(expectedResponseBody, responseEvent.body)
     }
 
     @Test
-    fun `build handler should return 400 for invalid body`() {
-        // Arrange
-        val handler = ApiGatewayHandlerBuilder.build<Request, Query, Response> { body, query ->
-            Response(message = "Hello, ${body.name}! Filter: ${query.filter}")
+    fun `test createApiHandlerWithoutBody`() {
+        val handler = Handler.createApiHandlerWithoutBody<ResponseBody> {
+            ResponseBody("Hello, World!")
         }
-        val invalidRequestBody = """{"invalidField":"value"}""" // Invalid JSON for `Request`
-        val queryParameters = mapOf("filter" to "active")
+
         val requestEvent = APIGatewayProxyRequestEvent()
-            .withBody(invalidRequestBody)
-            .withQueryStringParameters(queryParameters)
 
-        // Act
-        val responseEvent = handler(requestEvent)
+        val response = handler(requestEvent)
 
-        // Assert
-        assertEquals(400, responseEvent.statusCode)
-        val expectedErrorResponse = json.encodeToString(
-            mapOf("ErrorMessage" to "不正なリクエストボディです")
+        assertEquals(200, response.statusCode)
+        assertEquals(
+            "{\"message\":\"Hello, World!\"}",
+            response.body
         )
-        assertEquals(expectedErrorResponse, responseEvent.body)
     }
 
     @Test
-    fun `build handler should return 400 for invalid query`() {
-        // Arrange
-        val handler = ApiGatewayHandlerBuilder.build<Request, Query, Response> { body, query ->
-            Response(message = "Hello, ${body.name}! Filter: ${query.filter}")
+    fun `test createApiHandlerWithoutBodyWithQueryParameter`() {
+        val handler =
+            Handler.createApiHandlerWithoutBodyWithQueryParameter<QueryParameters, ResponseBody> { queryParams ->
+                assertEquals("active", queryParams.filter)
+                assertEquals(10, queryParams.limit)
+                ResponseBody("Filter: ${queryParams.filter}, Limit: ${queryParams.limit}")
+            }
+
+        val queryParameters = mapOf("filter" to "active", "limit" to "10")
+        val requestEvent = APIGatewayProxyRequestEvent().apply {
+            this.queryStringParameters = queryParameters
         }
-        val requestBody = json.encodeToString(Request(name = "Test User"))
-        val invalidQueryParameters = mapOf("invalidKey" to "value") // Invalid JSON for `Query`
-        val requestEvent = APIGatewayProxyRequestEvent()
-            .withBody(requestBody)
-            .withQueryStringParameters(invalidQueryParameters)
 
-        // Act
-        val responseEvent = handler(requestEvent)
+        val response = handler(requestEvent)
 
-        // Assert
-        assertEquals(400, responseEvent.statusCode)
-        val expectedErrorResponse = json.encodeToString(
-            mapOf("ErrorMessage" to "不正なクエリパラメータです")
+        assertEquals(200, response.statusCode)
+        assertEquals(
+            "{\"message\":\"Filter: active, Limit: 10\"}",
+            response.body
         )
-        assertEquals(expectedErrorResponse, responseEvent.body)
     }
 
     @Test
-    fun `build handler should return 500 for exception during action`() {
-        // Arrange
-        val handler = ApiGatewayHandlerBuilder.build<Request, Query, Response> { _, _ ->
-            throw RuntimeException("Unexpected error")
+    fun `test createApiHandlerWithQueryParameter`() {
+        val handler =
+            Handler.createApiHandlerWithQueryParameter<RequestBody, QueryParameters, ResponseBody> { requestBody, queryParams ->
+                assertEquals("John", requestBody.name)
+                assertEquals(30, requestBody.age)
+                assertEquals("active", queryParams.filter)
+                assertEquals(10, queryParams.limit)
+                ResponseBody("Hello, ${requestBody.name}. Filter: ${queryParams.filter}")
+            }
+
+        val requestBody = json.encodeToString(RequestBody("John", 30))
+        val queryParameters = mapOf("filter" to "active", "limit" to "10")
+        val requestEvent = APIGatewayProxyRequestEvent().apply {
+            this.body = requestBody
+            this.queryStringParameters = queryParameters
         }
-        val requestBody = json.encodeToString(Request(name = "Test User"))
-        val queryParameters = mapOf("filter" to "active")
-        val requestEvent = APIGatewayProxyRequestEvent()
-            .withBody(requestBody)
-            .withQueryStringParameters(queryParameters)
 
-        // Act
-        val responseEvent = handler(requestEvent)
+        val response = handler(requestEvent)
 
-        // Assert
-        assertEquals(500, responseEvent.statusCode)
-        val expectedErrorResponse = json.encodeToString(
-            mapOf("ErrorMessage" to "サーバエラーが発生しました")
+        assertEquals(200, response.statusCode)
+        assertEquals(
+            "{\"message\":\"Hello, John. Filter: active\"}",
+            response.body
         )
-        assertEquals(expectedErrorResponse, responseEvent.body)
-    }
-
-    @Test
-    fun `build handler should handle Unit for body and query`() {
-        // Arrange
-        val handler = ApiGatewayHandlerBuilder.build<Unit, Unit, Response> { _, _ ->
-            Response(message = "Handled Unit")
-        }
-        val requestEvent = APIGatewayProxyRequestEvent()
-
-        // Act
-        val responseEvent = handler(requestEvent)
-
-        // Assert
-        assertEquals(200, responseEvent.statusCode)
-        val expectedResponseBody = json.encodeToString(Response(message = "Handled Unit"))
-        assertEquals(expectedResponseBody, responseEvent.body)
     }
 }

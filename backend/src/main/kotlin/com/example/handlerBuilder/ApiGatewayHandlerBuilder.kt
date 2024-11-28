@@ -8,76 +8,63 @@ import io.github.oshai.kotlinlogging.withLoggingContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-object ApiGatewayHandlerBuilder {
+class ApiGatewayHandlerBuilder<RequestBody, QueryParameters, ResponseBody>(
+    private val httpHeaders: Map<String, String> = mapOf(),
+) {
 
     private val logger = KotlinLogging.logger { }
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    internal inline fun <reified T, reified Q, reified R> build(
-        crossinline action: (T, Q) -> R
-    ) = handler@{ input: APIGatewayProxyRequestEvent ->
+    private val baseHttpHeaders = mapOf(
+        "Content-Type" to "application/json",
+        "X-App-Version" to BuildConfig.APP_VERSION
+    )
+
+    fun build(
+        deserializeRequestBody: (String?) -> RequestBody,
+        deserializeQueryParameters: (Map<String, String>?) -> QueryParameters,
+        serializeResponseBody: (ResponseBody) -> String?,
+        block: (RequestBody, QueryParameters) -> ResponseBody
+    ): (APIGatewayProxyRequestEvent) -> APIGatewayProxyResponseEvent = build@{ requestEvent ->
         withLoggingContext(
-            "resource" to input.resource,
-            "path" to input.path,
-            "httpMethod" to input.httpMethod,
+            "resource" to requestEvent.resource,
+            "path" to requestEvent.path,
+            "httpMethod" to requestEvent.httpMethod,
         ) {
             val requestBody = try {
-                parseRequestBody<T>(input.body as String?)
+                val body: String? = requestEvent.body
+                deserializeRequestBody(body)
             } catch (e: Exception) {
                 logger.catching(e)
-                return@handler createErrorResponse(
+                return@build createErrorResponse(
                     statusCode = 400,
                     errorMessage = "不正なリクエストボディです"
                 )
             }
 
             val queryParameters = try {
-                parseQueryParameters<Q>(input.queryStringParameters as Map<String, String>?)
+                val parameters: Map<String, String>? = requestEvent.queryStringParameters
+                deserializeQueryParameters(parameters)
             } catch (e: Exception) {
                 logger.catching(e)
-                return@handler createErrorResponse(
+                return@build createErrorResponse(
                     statusCode = 400,
                     errorMessage = "不正なクエリパラメータです"
                 )
             }
 
             try {
-                val responseBodyJson = executeAction(
-                    action = action,
-                    requestBody = requestBody,
-                    queryParameters = queryParameters
-                )
-                return@handler createResponse(
-                    body = responseBodyJson
+                val responseBody = block(requestBody, queryParameters)
+                createResponse(
+                    statusCode = 200,
+                    body = serializeResponseBody(responseBody)
                 )
             } catch (e: Exception) {
                 logger.catching(e)
-                return@handler createErrorResponse()
+                return@build createErrorResponse()
             }
         }
-    }
-
-    private inline fun <reified T> parseRequestBody(body: String?) =
-        if (T::class == Unit::class) Unit as T
-        else json.decodeFromString<T>(body ?: "")
-
-
-    private inline fun <reified Q> parseQueryParameters(queryParameters: Map<String, String>?) =
-        if (Q::class == Unit::class) Unit as Q
-        else json.decodeFromString<Q>(
-            json.encodeToString(queryParameters ?: mapOf("" to ""))
-        )
-
-    private inline fun <reified T, reified Q, reified R> executeAction(
-        action: (T, Q) -> R,
-        requestBody: T,
-        queryParameters: Q
-    ): String? {
-        val responseBody = action(requestBody, queryParameters)
-        return if (R::class != Unit::class) {
-            json.encodeToString(responseBody)
-        } else null
     }
 
     private fun createErrorResponse(
@@ -90,17 +77,12 @@ object ApiGatewayHandlerBuilder {
         )
     )
 
-    internal fun createResponse(
+    private fun createResponse(
         statusCode: Int = 200,
-        headers: Map<String, String> = mapOf(
-            "X-App-Version" to BuildConfig.APP_VERSION
-        ),
         body: String? = null
-    ) = APIGatewayProxyResponseEvent()
-        .withStatusCode(statusCode)
-        .withHeaders(headers)
-        .apply {
-            body?.let { withBody(it) }
-        }
-
+    ) = APIGatewayProxyResponseEvent().apply {
+        this.statusCode = statusCode
+        this.headers = baseHttpHeaders + httpHeaders
+        this.body = body
+    }
 }
