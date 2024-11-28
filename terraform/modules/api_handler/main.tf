@@ -1,12 +1,18 @@
+data "aws_s3_object" "jar" {
+  bucket = var.jar_file.bucket
+  key    = var.jar_file.key
+}
+
 resource "aws_lambda_function" "api_handler" {
-  function_name    = var.operation_id
-  runtime          = "java21"
-  handler          = "org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest"
-  role             = aws_iam_role.lambda.arn
-  filename         = var.jar_file_path
-  source_code_hash = filesha256(var.jar_file_path)
-  timeout          = 29
-  memory_size      = var.function_settings.memory_size
+  function_name     = var.operation_id
+  runtime           = "java21"
+  handler           = "org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest"
+  role              = aws_iam_role.lambda.arn
+  s3_bucket         = data.aws_s3_object.jar.bucket
+  s3_key            = data.aws_s3_object.jar.key
+  s3_object_version = data.aws_s3_object.jar.version_id
+  timeout           = 29
+  memory_size       = var.function_settings.memory_size
 
   environment {
     variables = {

@@ -3,9 +3,12 @@ variable "operation_id" {
   type        = string
 }
 
-variable "jar_file_path" {
-  description = "The path to the JAR file that contains the compiled Lambda function code."
-  type        = string
+variable "jar_file" {
+  description = "S3バケットとキーの情報を含むJARファイルの場所"
+  type = object({
+    bucket = string
+    key    = string
+  })
 }
 
 variable "function_settings" {

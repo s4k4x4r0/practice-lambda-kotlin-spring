@@ -145,8 +145,13 @@ tasks.register<S3UploadTask>("cpJarS3") {
     description = "Upload Shado Jar to S3"
 
     val jarS3BucketConfigurationProvider = project.objects.newInstance<JarS3BucketConfigurationProvider>()
+    val originalFileName = tasks.shadowJar.get().archiveFileName.get()
 
     inputFile = tasks.shadowJar.get().archiveFile
     bucketName = jarS3BucketConfigurationProvider.bucketName
     prefix = "lambdaJar"
+    targetFileName = "backend.jar"
+    tags = project.objects.mapProperty<String, String>().apply {
+        put("OriginalName", originalFileName)
+    }
 }
